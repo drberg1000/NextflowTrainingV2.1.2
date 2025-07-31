@@ -22,21 +22,30 @@ process sayHello {
 /*
  * Pipeline parameters
  */
-params.greeting = "Hello, World!"
+params.greeting = "greeting.csv"
 workflow {
-    // Converts greetings_array is treated as a string instead of an array of strings
-    // greetings_array = ['Hello Channels!', 'Hola', 'Bienvinedo']
-    // greeting_ch = Channel.of(greetings_array)
+    // Running with: training/hello-nextflow -> rm -r results/* ; nextflow run hello-channels.nf ; cat results/*
+    greeting_ch = Channel.fromPath(params.greeting)
 
-    // Creates a sayHello Call for each string in parens
-    // greeting_ch = Channel.of('Hello Channels!', 'Hola', 'Bienvinedo')
-
-    // Shows the content of greeting_ch at each step.
-    greetings_array = ['Hello Channels!', 'Hola', 'Bienvinedo', "Guten Morgen"]
-    greeting_ch = Channel.of(greetings_array)
-                         .view { greeting->"Before flatten: $greeting"}
-                         .flatten()
-                         .view { greeting->"After flatten: $greeting"}
     // emit a greeting
     sayHello(greeting_ch)
+
+    // Expect ??? The above isn't really consistent as we haven't created a file anyway.
+    // Wondering what the error will be. How is a path generated from a string? Using CWD?
+
+    // Outputs:
+    /*
+    Caused by:
+        File `/workspaces/training/hello-nextflow/greeting.csv-output.txt` is outside the scope of the process work directory: /workspaces/training/hello-nextflow/work/92/9051b75b849b9412aaadb7f26f54f7
+
+
+        Command executed:
+
+        echo '/workspaces/training/hello-nextflow/greeting.csv' >> '/workspaces/training/hello-nextflow/greeting.csv-output.txt'
+    */
+
+    /* Review...
+    Channel.fromPath prepended CWD to the string.
+    Process sayHello just treated it as a string.
+    */
 }
