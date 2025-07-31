@@ -26,6 +26,10 @@ params.greeting = "greeting.csv"
 workflow {
     // Running with: training/hello-nextflow -> rm -r results/* ; nextflow run hello-channels.nf ; cat results/*
     greeting_ch = Channel.fromPath(params.greeting)
+                         .view {csv -> "Before splitCsv: $csv"}
+                         .splitCsv()
+                         .view {csv -> "After splitCsv: $csv"}
+
 
     // emit a greeting
     sayHello(greeting_ch)
