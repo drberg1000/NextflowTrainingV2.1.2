@@ -22,9 +22,13 @@ process sayHello {
 /*
  * Pipeline parameters
  */
-params.greeting = "greeting.csv"
+params.greeting = "greetings.csv"
 workflow {
-    // Running with: training/hello-nextflow -> rm -r results/* ; nextflow run hello-channels.nf ; cat results/*
+    // Running with:
+    /*
+    training/hello-nextflow -> echo '"Hello Channels!", "Hola", "Bienvinedo", "Guten Morgen"' > greetings.csv
+    training/hello-nextflow -> rm -r results/* ; nextflow run hello-channels.nf ; cat results/*
+    */
     greeting_ch = Channel.fromPath(params.greeting)
                          .view {csv -> "Before splitCsv: $csv"}
                          .splitCsv()
@@ -34,22 +38,23 @@ workflow {
     // emit a greeting
     sayHello(greeting_ch)
 
-    // Expect ??? The above isn't really consistent as we haven't created a file anyway.
-    // Wondering what the error will be. How is a path generated from a string? Using CWD?
+    // Expectation:
+    /*
+        No error about a missing file this time.
+        Before Split == Path
+        After Split == Values
+    */
 
     // Outputs:
     /*
-    Caused by:
-        File `/workspaces/training/hello-nextflow/greeting.csv-output.txt` is outside the scope of the process work directory: /workspaces/training/hello-nextflow/work/92/9051b75b849b9412aaadb7f26f54f7
+        ERROR ~ Error executing process > 'sayHello (1)'
 
-
-        Command executed:
-
-        echo '/workspaces/training/hello-nextflow/greeting.csv' >> '/workspaces/training/hello-nextflow/greeting.csv-output.txt'
+        Caused by:
+            Missing output file(s) `["Hello Channels!",  "Hola",  "Bienvinedo",  "Guten Morgen"]-output.txt` expected by process `sayHello (1)`
     */
 
     /* Review...
-    Channel.fromPath prepended CWD to the string.
-    Process sayHello just treated it as a string.
+    Ah... back to roughtly where we were with .flatten() being needed.
+
     */
 }
